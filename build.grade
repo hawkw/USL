@@ -1,0 +1,44 @@
+apply plugin: "scala"
+apply plugin: "idea"
+
+/*
+ * Gets the version name from the latest Git tag
+ */
+def getVersionName = { ->
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'describe', '--tags'
+        standardOutput = stdout
+    }
+    return stdout.toString().trim()
+}
+repositories {
+    mavenLocal();
+    mavenCentral()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+}
+sourceCompatibility = '1.7'
+version = getVersionName
+
+// define a configuration for scala compiler plugins
+// the transitive=false means that the plugin won't show up
+// as a dependency in the final output
+configurations {
+    //noinspection GroovyAssignabilityCheck
+    scalaCompilerPlugins { transitive = false }
+}
+
+tasks.withType(ScalaCompile) {
+    // use zinc-based incremental compiler
+    scalaCompileOptions.useAnt = false
+}
+
+tasks.withType(ScalaDoc) {
+    scalaDocOptions.setAdditionalParameters(["-doc-external-doc"])
+}
+
+dependencies {
+    compile "org.scala-lang:scala-library:2.11.4"
+    compile "org.scala-lang:scala-parser-combinators:2.11.0-M4"
+    testCompile 'org.scalatest:scalatest_2.11:2.2.0+'
+}
