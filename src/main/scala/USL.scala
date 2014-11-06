@@ -19,7 +19,7 @@ case class Lit(s: String) extends Data{
 object USL extends JavaTokenParsers {
 
   val DataStack = mutable.Stack[Data]()
-  type IStream = List[Data]
+  val IStack = mutable.Stack[Data]()
   val Definitions = mutable.Map[Lit, Data]()
 
   def prog: Parser[Obj] = rep(obj|num|strlit|lit) ^^{Obj(_)}
@@ -30,73 +30,67 @@ object USL extends JavaTokenParsers {
   def obj: Parser[Obj] = "{" ~> rep(num|strlit|lit|obj) <~ "}" ^^{ l => Obj(l)}
 
 
-  def evalOne(): Boolean = {
-    if(DataStack.isEmpty) return false
-    DataStack.top match {
+  def evalOne(param: Data): Unit = {
+    param match {
       case Lit("+") => {
-        DataStack.pop()
         val a: Num = DataStack.pop.asInstanceOf[Num]
         val b: Num = DataStack.pop.asInstanceOf[Num]
         DataStack.push(Num(a.n + b.n))
-        true
       }
       case Lit("-") => {
-        DataStack.pop()
         val b = DataStack.pop().asInstanceOf[Num]
         val a = DataStack.pop().asInstanceOf[Num]
         DataStack.push(Num(a.n - b.n))
-        true
       }
       case Lit("fl") => {
-        DataStack.pop()
         val a = DataStack.pop()
         val b = DataStack.pop()
         DataStack.push(a)
         DataStack.push(b)
-        true
+      }
+      case Lit("exec") => {
+        IStack.push(DataStack.pop())
+      }
+      case Lit("yank") => {
+        val a = DataStack.pop().asInstanceOf[Obj]
+        DataStack.push(Obj(a.data.tail))
+        DataStack.push(a.data.head)
+      }
+      case Lit("smush") => {
+        val a = DataStack.pop()
+        val b = DataStack.pop().asInstanceOf[Obj]
+        DataStack.push(Obj(a :: b.data))
       }
       case Lit("lup") => {
-        DataStack.pop()
         if(DataStack.top.isInstanceOf[Lit]) {
           val i = DataStack.pop().asInstanceOf[Lit]
           Definitions.get(i) match {
             case Some(g) => DataStack.push(g)
             case None => DataStack.push(i)
           }
-          true
         } else if(DataStack.top.isInstanceOf[Obj]) {
           val o = DataStack.pop().asInstanceOf[Obj]
           o.data.reverse.foreach(DataStack.push(_))
-          true
-        } else {
-          true
         }
       }
       case Lit("dup") => {
-        DataStack.pop()
         DataStack.push(DataStack.top)
-        true
       }
       case Lit("ident?") => {
-        DataStack.pop()
         if(DataStack.pop().isInstanceOf[Lit]) {
           DataStack.push(Num(1))
         } else {
           DataStack.push(Num(0))
         }
-        true
       }
       case Lit("obj?") => {
-        DataStack.pop()
         if(DataStack.pop().isInstanceOf[Obj]) {
           DataStack.push(Num(1))
         } else {
           DataStack.push(Num(0))
         }
-        true
       }
       case Lit("if") => {
-        DataStack.pop()
         val test = DataStack.pop()
         val falsey = DataStack.pop().asInstanceOf[Obj]
         val truthy = DataStack.pop().asInstanceOf[Obj]
@@ -105,63 +99,45 @@ object USL extends JavaTokenParsers {
           case _ => truthy
         }
         put.data.reverse.foreach({
-          DataStack.push(_)
+          IStack.push(_)
         })
-        true
       }
       case Lit("undef") => {
-        DataStack.pop()
         val l = DataStack.pop().asInstanceOf[Obj]
         l.data.reverse.foreach({
           case s: Lit => Definitions.remove(s)
           case _ =>
         })
-        true
       }
       case Lit("print") => {
-        DataStack.pop()
         println(DataStack.top)
-        true
       }
       case Lit("drop") => {
         DataStack.pop()
-        DataStack.pop()
-        true
       }
       case Lit("clear") => {
         DataStack.clear()
-        false
       }
       case Lit("def") => {
-        DataStack.pop()
         val bind = DataStack.pop()
         val name = DataStack.pop().asInstanceOf[Lit]
         Definitions.put(name, bind)
-        true
       }
-      case _ => false
+      case _ => DataStack.push(param)
     }
   }
 
-  def run(s: IStream): Unit = {
-    if(s.length == 0) {
-      println("> " + DataStack)
-      return
-    }
-    val top = s.head
-    if(top.isInstanceOf[Lit] && Definitions.contains(top.asInstanceOf[Lit])) {
-      val pack = Definitions.get(top.asInstanceOf[Lit]).get
-      pack match {
-        case Obj(l) => run(l ::: s.tail)
-        case _ => run(Definitions.get(top.asInstanceOf[Lit]).get :: s.tail)
-      }
-    } else {
-      DataStack.push(top)
-      while (evalOne()) {}
-      if(!DataStack.isEmpty && DataStack.top.isInstanceOf[Lit] && Definitions.contains(DataStack.top.asInstanceOf[Lit])) {
-        run(Definitions.get(DataStack.pop().asInstanceOf[Lit]).get :: s.tail)
+  def run(): Unit = {
+    while(IStack.length > 0) {
+      val top = IStack.pop()
+      if (top.isInstanceOf[Lit] && Definitions.contains(top.asInstanceOf[Lit])) {
+        val pack = Definitions.get(top.asInstanceOf[Lit]).get
+        pack match {
+          case Obj(l) => l.reverse.foreach(IStack.push(_))
+          case _ => IStack.push(pack)
+        }
       } else {
-        run(s.tail)
+        evalOne(top)
       }
     }
   }
@@ -169,9 +145,11 @@ object USL extends JavaTokenParsers {
   def main(args: Array[String]): Unit = {
     var v = ""
     while(v != "exit") {
+      println("> " + DataStack)
       v = Console.in.readLine()
       try {
-        run(parseAll(prog,v).get.data)
+        parseAll(prog,v).get.data.reverse.foreach(IStack.push(_))
+        run()
       } catch {
         case e: Throwable => println(e)
       }
