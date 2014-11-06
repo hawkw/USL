@@ -17,12 +17,12 @@ case class Lit(s: String) extends Data{
 
 object USL extends JavaTokenParsers {
 
-  def prog: Parser[Obj] = rep(obj|num|strlit|lit) ^^ {case l => Obj(for {n <- l if n.isInstanceOf[Data]} yield {n.asInstanceOf[Data]}) }
+  def prog: Parser[Obj] = rep(obj|num|strlit|lit) ^^{Obj(_)}
 
-  def num: Parser[Num] = """[0-9]+\.?[0-9]*""".r ^^{ case n => Num(n.toDouble)}
-  def strlit: Parser[Obj] = stringLiteral ^^{ case s => Obj(s.toList.reverse.map({c => Lit(c.toString)}))}
-  def lit: Parser[Lit] = """[^{}"]+[{}]""".r ^^{case s => Lit(s.trim())}
-  def obj: Parser[Obj] = "{" ~> rep(num|strlit|lit|obj) <~ "}" ^^{ case l => Obj(l)}
+  def num: Parser[Num] = """[0-9]+\.?[0-9]*""".r ^^{s => Num(s.toDouble)}
+  def strlit: Parser[Obj] = stringLiteral ^^{ s => Obj(s.toList.reverse.map({c => Lit(c.toString)}))}
+  def lit: Parser[Lit] = """[^{}"]+[{}]""".r ^^{s => Lit(s.trim())}
+  def obj: Parser[Obj] = "{" ~> rep(num|strlit|lit|obj) <~ "}" ^^{ l => Obj(l)}
 
   def main(args: Array[String]): Unit = {
     var i = ""
