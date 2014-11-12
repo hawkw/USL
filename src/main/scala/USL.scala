@@ -1,3 +1,5 @@
+import java.io.File
+
 import scala.collection.mutable
 import scala.util.parsing.combinator.JavaTokenParsers
 import scala.math.Numeric
@@ -22,6 +24,7 @@ object USL extends JavaTokenParsers {
   val DataStack = mutable.Stack[Data]()
   val IStack = mutable.Stack[Data]()
   val Definitions = mutable.Map[Lit, Data]()
+  var gfx: USLSlickAdapter = null
 
   def prog: Parser[Obj] = rep(obj|num|strlit|lit) ^^{Obj(_)}
 
@@ -70,6 +73,16 @@ object USL extends JavaTokenParsers {
           case o: Obj => o.data.reverse.foreach(DataStack.push)
           case l => DataStack.push(l)
         }
+
+      case Lit("setcol") =>
+        gfx.color(DataStack.pop().asInstanceOf[Num].n.toFloat, DataStack.pop().asInstanceOf[Num].n.toFloat, DataStack.pop().asInstanceOf[Num].n.toFloat)
+        //eventually we will want to flip on user-defined basis, I think?
+
+      case Lit("line") =>
+        gfx.line(DataStack.pop().asInstanceOf[Num].n.toFloat,DataStack.pop().asInstanceOf[Num].n.toFloat,DataStack.pop().asInstanceOf[Num].n.toFloat,DataStack.pop().asInstanceOf[Num].n.toFloat)
+
+      case Lit("bg") =>
+        gfx.background(DataStack.pop().asInstanceOf[Num].n.toFloat,DataStack.pop().asInstanceOf[Num].n.toFloat,DataStack.pop().asInstanceOf[Num].n.toFloat)
 
       case Lit("dup") => DataStack.push(DataStack.top)
 
@@ -148,6 +161,10 @@ object USL extends JavaTokenParsers {
   }
 
   def main(args: Array[String]): Unit = {
+    System.setProperty("java.library.path", "dist/natives")
+    System.setProperty("org.lwjgl.librarypath", new File("dist/natives").getAbsolutePath())
+
+    gfx = new USLSlickAdapter
     var v = ""
     while(v != "exit") {
       println("> " + DataStack)
@@ -156,7 +173,7 @@ object USL extends JavaTokenParsers {
         parseAll(prog,v).get.data.reverse.foreach(IStack.push)
         run()
       } catch {
-        case e: Throwable => println(e)
+        case e: Throwable => e.printStackTrace()
       }
     }
   }
