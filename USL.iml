@@ -15,11 +15,11 @@
       <excludeFolder url="file://$MODULE_DIR$/build" />
     </content>
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="Gradle: org.scala-lang:scala-library:2.11.4" level="project" />
     <orderEntry type="library" exported="" name="Gradle: org.scala-lang:scala-parser-combinators:2.11.0-M4" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.scalatest:scalatest_2.11:2.2.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.scala-lang:scala-reflect:2.11.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.scala-lang.modules:scala-xml_2.11:1.0.1" level="project" />
+    <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
