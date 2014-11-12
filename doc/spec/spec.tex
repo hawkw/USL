@@ -1,0 +1,21 @@
+\input assets/420pre
+\begin{document}
+\MYTITLE{Useless Stack Language 1.0 Specification}
+\MYHEADERS{}
+\tableofcontents
+\vfill
+\pagebreak
+\section{Introduction}
+\section{Grammar}
+\begin{grammar}<program> ::= <data>
+\alt <data> <program>
+
+<data> ::= <number>
+	\alt <string> 
+	\alt <ident>
+	\alt <obj>
+	
+<obj> ::= `\{'  <program> `\}'
+\end{grammar}
+\end{document}
+

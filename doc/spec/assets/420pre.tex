@@ -1,0 +1,215 @@
+%!TEX root=lab1.tex
+% mainfile: lab1.tex
+% CS 580 style
+% Typical usage (all UPPERCASE items are optional):
+%       \input 580pre
+%       \begin{document}
+%       \MYTITLE{Title of document, e.g., Lab 1\\Due ...}
+%       \MYHEADERS{short title}{other running head, e.g., due date}
+%       \PURPOSE{Description of purpose}
+%       \SUMMARY{Very short overview of assignment}
+%       \DETAILS{Detailed description}
+%         \SUBHEAD{if needed} ...
+%         \SUBHEAD{if needed} ...
+%          ...
+%       \HANDIN{What to hand in and how}
+%       \begin{checklist}
+%       \item ...
+%       \end{checklist}
+% There is no need to include a "\documentstyle."
+% However, there should be an "\end{document}."
+%
+%===========================================================
+\documentclass[11pt,twoside,titlepage]{article}
+%%NEED TO ADD epsf!!
+\usepackage{assets/threeparttop}
+\usepackage{graphicx}
+\usepackage{latexsym}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{caption,subcaption}
+\usepackage[toc,page]{appendix}
+\usepackage{cite}
+\usepackage[section]{placeins}
+\usepackage[compatibility=false]{caption}
+\usepackage{subcaption}
+\usepackage{syntax}
+%\usepackage{pgf,pgfarrows,pgfnodes,pgfautomata,pgfheaps,pgfshade}
+%\usepackage{tikz}
+%\usepackage[normalem]{ulem}
+%\tikzset{
+%    %Define standard arrow tip
+%    >=stealth',
+%    %Define style for boxes
+%    oval/.style={
+%           rectangle,
+%           rounded corners,
+%           draw=black, very thick,
+%           text width=6.5em,
+%           minimum height=2em,
+%           text centered},
+%    % Define arrow style
+%    arr/.style={
+%           ->,
+%           thick,
+%           shorten <=2pt,
+%           shorten >=2pt,}
+%%%}
+\usepackage[noend]{algorithmic}
+\usepackage[noend]{algorithm}
+\newcommand{\bfor}{{\bf for\ }}
+\newcommand{\bthen}{{\bf then\ }}
+\newcommand{\bwhile}{{\bf while\ }}
+\newcommand{\btrue}{{\bf true\ }}
+\newcommand{\bfalse}{{\bf false\ }}
+\newcommand{\bto}{{\bf to\ }}
+\newcommand{\bdo}{{\bf do\ }}
+\newcommand{\bif}{{\bf if\ }}
+\newcommand{\belse}{{\bf else\ }}
+\newcommand{\band}{{\bf and\ }}
+\newcommand{\breturn}{{\bf return\ }}
+\newcommand{\mod}{{\rm mod}}
+\renewcommand{\algorithmiccomment}[1]{$\rhd$ #1}
+\newenvironment{checklist}{\par\noindent\hspace{-.25in}{\bf Checklist:}\renewcommand{\labelitemi}{$\Box$}%
+\begin{itemize}}{\end{itemize}}
+\pagestyle{threepartheadings}
+\usepackage{url}
+\usepackage{wrapfig}
+% removing the standard hyperref to avoid the horrible boxes
+%\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
+% added in the dtklogos for the bibtex formatting
+\usepackage{dtklogos}
+%=========================
+% One-inch margins everywhere
+%=========================
+\setlength{\topmargin}{0in}
+\setlength{\textheight}{8.5in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+%===============================
+%===============================
+% Macro for document title:
+%===============================
+\newcommand{\MYTITLE}[1]%
+   {\begin{center}
+     \begin{center}
+     \bf
+     CMPSC 420\\Introduction to Compiler Design\\
+     Fall 2014\\
+     \medskip
+     \end{center}
+     \bf
+     #1
+     \end{center}
+}
+%================================
+% Macro for headings:
+%================================
+\newcommand{\MYHEADERS}
+   {
+   \lhead{\today}
+   \rhead{Clive and Weisman}
+    %\immediate\write16{}
+    %\immediate\write16{DATE OF HANDOUT?}
+    %\read16 to \dateofhandout
+    %\immediate\write16{}
+    %\immediate\write16{HANDOUT NUMBER?}
+    %\read16 to\handoutnum
+   }
+
+%================================
+% Macro for bold italic:r
+%================================
+\newcommand{\bit}[1]{{\textit{\textbf{#1}}}}
+
+%=========================
+% Non-zero paragraph skips.
+%=========================
+\setlength{\parskip}{1ex}
+
+%=========================
+% Create various environments:
+%=========================
+\newcommand{\PURPOSE}{\par\noindent\hspace{-.25in}{\bf Purpose:\ }}
+\newcommand{\SUMMARY}{\par\noindent\hspace{-.25in}{\bf Summary:\ }}
+\newcommand{\DETAILS}{\par\noindent\hspace{-.25in}{\bf Details:\ }}
+\newcommand{\PLEDGE}{\par\noindent\hspace{-.25in}{\bf Pledge:\ }}
+\newcommand{\HANDIN}{\par\noindent\hspace{-.25in}{\bf Hand in:\ }}
+\newcommand{\SUBHEAD}[1]{\bigskip\par\noindent\hspace{-.1in}{\sc #1}\\}
+%\newenvironment{CHECKLIST}{\begin{itemize}}{\end{itemize}}
+\lstdefinestyle{appendixR}{%
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  xleftmargin=\parindent,
+  xrightmargin=\parindent,
+  language=R,
+  showstringspaces=false,
+  basicstyle=\small,
+  numberstyle=\tiny,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape,
+  numbers = left,
+  tabsize=4,
+}
+
+\lstdefinestyle{appendixPy}{
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  xleftmargin=\parindent,
+  xrightmargin=\parindent,
+  language=Python,
+  showstringspaces=false,
+  basicstyle=\small,
+  numberstyle=\tiny,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape,
+  numbers = left,
+  tabsize=4,
+}
+\lstdefinestyle{appendixJava}{%
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  xleftmargin=\parindent,
+  xrightmargin=\parindent,
+  language=Java,
+  showstringspaces=false,
+  basicstyle=\small,
+  numberstyle=\tiny,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape,
+  numbers = left,
+  tabsize=4,
+}
+\lstdefinestyle{appendixXML}{
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  xleftmargin=\parindent,
+  xrightmargin=\parindent,
+  language=XML,
+  showstringspaces=false,
+  basicstyle=\small,
+  numberstyle=\tiny,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape,
+  numbers = left,
+  tabsize=4,
+}
+\lstdefinestyle{insetJava}{%
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  frame=tb,
+  xleftmargin=\parindent,
+  xrightmargin=\parindent,
+  language=Java,
+  showstringspaces=false,
+  basicstyle=\small,
+  numberstyle=\tiny,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape,
+  numbers = left,
+  tabsize=4,
+}
