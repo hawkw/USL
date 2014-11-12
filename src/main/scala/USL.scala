@@ -74,7 +74,7 @@ object USL extends JavaTokenParsers {
       case Lit("dup") => DataStack.push(DataStack.top)
 
       case Lit("eq?") =>
-        if(DataStack.pop() == DataStack.top) {
+        if(DataStack.pop() == DataStack.pop()) {
           DataStack.push(Num(1))
         } else {
           DataStack.push(Num(0))
