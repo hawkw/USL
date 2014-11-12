@@ -16,7 +16,7 @@ case class Num(n: Double) extends Data {
   override def toString = n.toString
 }
 case class Lit(s: String) extends Data{
-  override def toString = s"'$s'"
+  override def toString = s"$s"
 }
 
 object USL extends JavaTokenParsers {
@@ -54,7 +54,13 @@ object USL extends JavaTokenParsers {
 
         /** Execpack: Unpacks an object and places all of its symbols on the instruction stack to be executed next. */
       case Lit("execpack") =>
-        DataStack.pop().asInstanceOf[Obj].data.reverse.foreach(IStack.push)
+        DataStack.pop().asInstanceOf[Obj].data.foreach({
+          case x: Lit if Definitions.contains(x) => Definitions.get(x).get match {
+            case o: Obj => o.data.foreach(evalOne)
+            case q => evalOne(q)
+          }
+          case x => evalOne(x)
+        })
 
         /** Yank: Pop() but for objects at the top of the DataStack */
       case Lit("yank") =>
@@ -74,12 +80,27 @@ object USL extends JavaTokenParsers {
           case l => DataStack.push(l)
         }
 
+      case Lit("catdent") =>
+        DataStack.push(Lit(DataStack.pop.asInstanceOf[Obj].data.mkString("")))
+
+      case Lit("sizeof") =>
+        DataStack.push(Num(DataStack.size))
+
       case Lit("setcol") =>
         gfx.color(DataStack.pop().asInstanceOf[Num].n.toFloat, DataStack.pop().asInstanceOf[Num].n.toFloat, DataStack.pop().asInstanceOf[Num].n.toFloat)
         //eventually we will want to flip on user-defined basis, I think?
 
       case Lit("line") =>
         gfx.line(DataStack.pop().asInstanceOf[Num].n.toFloat,DataStack.pop().asInstanceOf[Num].n.toFloat,DataStack.pop().asInstanceOf[Num].n.toFloat,DataStack.pop().asInstanceOf[Num].n.toFloat)
+
+      case Lit("nI") =>
+        DataStack.push(IStack.top)
+
+      case Lit("skipI") =>
+        IStack.pop()
+
+      case Lit("shiftI") =>
+        IStack.push(DataStack.pop())
 
       case Lit("bg") =>
         gfx.background(DataStack.pop().asInstanceOf[Num].n.toFloat,DataStack.pop().asInstanceOf[Num].n.toFloat,DataStack.pop().asInstanceOf[Num].n.toFloat)
@@ -115,7 +136,8 @@ object USL extends JavaTokenParsers {
           case Num(0) => falsey
           case _ => truthy
         }
-        put.data.reverse.foreach(IStack.push)
+        DataStack.push(put)
+        IStack.push(Lit("execpack"))
 
       case Lit("undef") =>
         val l = DataStack.pop().asInstanceOf[Obj]
@@ -142,8 +164,8 @@ object USL extends JavaTokenParsers {
     while(IStack.length > 0) {
       IStack.pop() match {
         case q: Lit if Definitions.contains(q) => Definitions.get(q).get match {
-          case Obj(l) => l.reverse.foreach(IStack.push)
-          case l => IStack.push(l)
+          case Obj(l) => l.foreach(evalOne)
+          case l => evalOne(l)
         }
         case l => evalOne(l)
       }
@@ -162,7 +184,7 @@ object USL extends JavaTokenParsers {
 
   def main(args: Array[String]): Unit = {
     System.setProperty("java.library.path", "dist/natives")
-    System.setProperty("org.lwjgl.librarypath", new File("dist/natives").getAbsolutePath())
+    System.setProperty("org.lwjgl.librarypath", new File("dist/natives").getAbsolutePath)
 
     gfx = new USLSlickAdapter
     var v = ""
@@ -174,7 +196,9 @@ object USL extends JavaTokenParsers {
         run()
       } catch {
         case e: Throwable => e.printStackTrace()
+          IStack.clear()
       }
     }
+    System.exit(0)
   }
 }
