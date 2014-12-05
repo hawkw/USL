@@ -1,15 +1,45 @@
-apply plugin: "java"
-apply plugin: "scala"
+
+allprojects {
+    apply plugin: "java"
+    apply plugin: "scala"
+    sourceCompatibility = '1.7'
+}
 
 repositories {
     mavenCentral();
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 
-sourceCompatibility = '1.7'
-
 dependencies {
     compile "org.scala-lang:scala-library:2.11.4"
     compile "org.scala-lang:scala-parser-combinators:2.11.0-M4"
+    compile "org.slick2d:slick2d-core:1.0.1"
+    compile "org.lwjgl.lwjgl:lwjgl-platform:2.9.1"
     testCompile 'org.scalatest:scalatest_2.11:2.2.0+'
 }
+
+task cleanOldNatives << {
+    ant.delete() {
+        fileset(dir:"dist") {
+            include(name:"**/*.so")
+            include(name:"**/*.dll")
+            include(name:"**/*.jnilib")
+            include(name:"**/*.dylib")
+        }
+    }
+    ant.delete(dir:"dist/natives/META-INF")
+}
+
+task unpackNatives(dependsOn: cleanOldNatives) << {
+    configurations.compile.files.each { file ->
+        if (file.name.matches(".*native.*")) {
+            logger.debug("Unpacking " + file.name + " into dist...")
+// This destination is to work with the plugin conventions
+            ant.unzip(src:file, dest:"dist/natives", overwrite:"true")
+        }
+    }
+    ant.delete(dir:"dist/natives/META-INF")
+}
+
+// Ensure the source directory doesn't have natives in it, because we don't want to check those as source
+task prepForSync(dependsOn: [clean, cleanOldNatives])
